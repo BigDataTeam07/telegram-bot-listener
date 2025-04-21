@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: telegram-bot-credentials
+  namespace: amazon-music-review
+type: Opaque
+data:
+  # These values need to be replaced with actual encoded values
+  # Use echo -n "your-bot-token" | base64 to generate
+  telegram-bot-token: YW1hem9uLW11c2ljLXJldmlldy1ib3QtdG9rZW4=   # Replace with actual token
+  telegram-bot-username: YW1hem9uLW11c2ljLXJldmlldy1ib3Q=         # Replace with actual username
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegram-kafka-producer
+  namespace: amazon-music-review
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telegram-kafka-producer
+  template:
+    metadata:
+      labels:
+        app: telegram-kafka-producer
+    spec:
+      containers:
+        - name: telegram-kafka-producer
+          image: telegram-kafka-producer:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: telegram-bot-credentials
+                  key: telegram-bot-token
+            - name: TELEGRAM_BOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: telegram-bot-credentials
+                  key: telegram-bot-username
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "amazon-music-review-kafka-service.amazon-music-review.svc.cluster.local:9092"
+            - name: KAFKA_TOPIC
+              value: "social-media-topic"
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: telegram-kafka-producer-service
+  namespace: amazon-music-review
+spec:
+  selector:
+    app: telegram-kafka-producer
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP
