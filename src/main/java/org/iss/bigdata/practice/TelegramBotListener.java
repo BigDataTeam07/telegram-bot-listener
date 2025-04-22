@@ -53,8 +53,18 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
     public void onUpdateReceived(Update update) {
         try {
             // Check if the update has a message and the message has text
-            if (update.hasMessage() && update.getMessage().hasText()) {
+            // For channel posts, include channel information
+            if (update.hasChannelPost() ) {
+                // skip channel posts
+                return;
+            }
+            if (!update.hasMessage() || !update.getMessage().hasText() ) {
+                logger.warn("Update does not contain a text message");
+                return;
+            }
+            if (update.getMessage().getFrom() != null) {
                 Message message = update.getMessage();
+
                 String messageText = message.getText();
 
                 logger.info("Received message from user {}: {}",
@@ -66,13 +76,9 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
                 jsonNode.put("username", message.getFrom().getUserName());
                 jsonNode.put("message", messageText);
                 jsonNode.put("chat_id", message.getChatId());
+                jsonNode.put("chat_name", message.getChat().getTitle());
                 jsonNode.put("timestamp", Instant.now().toEpochMilli());
 
-                // For channel posts, include channel information
-                if (update.hasChannelPost()) {
-                    jsonNode.put("channel_id", update.getChannelPost().getChatId());
-                    jsonNode.put("channel_title", update.getChannelPost().getChat().getTitle());
-                }
 
                 String jsonMessage = objectMapper.writeValueAsString(jsonNode);
 
@@ -87,8 +93,9 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
                     } else {
                         logger.info("Message sent to topic: {}, partition: {}, offset: {}",
                                 metadata.topic(), metadata.partition(), metadata.offset());
+
                     }
-                }); // Blocking for simplicity, consider async in production
+                });
             }
         } catch (Exception e) {
             logger.error("Error processing update", e);
