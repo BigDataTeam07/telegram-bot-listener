@@ -88,39 +88,7 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
                         logger.info("Message sent to topic: {}, partition: {}, offset: {}",
                                 metadata.topic(), metadata.partition(), metadata.offset());
                     }
-                }).get(); // Blocking for simplicity, consider async in production
-            }
-            // Listen for channel posts
-            else if (update.hasChannelPost() && update.getChannelPost().hasText()) {
-                Message channelPost = update.getChannelPost();
-                String postText = channelPost.getText();
-
-                logger.info("Received channel post from channel {}: {}",
-                        channelPost.getChat().getTitle(), postText);
-
-                // Convert to JSON
-                ObjectNode jsonNode = objectMapper.createObjectNode();
-                jsonNode.put("channel_id", channelPost.getChatId());
-                jsonNode.put("channel_title", channelPost.getChat().getTitle());
-                jsonNode.put("message", postText);
-                jsonNode.put("message_id", channelPost.getMessageId());
-                jsonNode.put("timestamp", Instant.now().toEpochMilli());
-
-                String jsonMessage = objectMapper.writeValueAsString(jsonNode);
-
-                // Send to Kafka
-                String key = String.valueOf(channelPost.getChatId());
-                ProducerRecord<String, String> record =
-                        new ProducerRecord<>(kafkaTopic, key, jsonMessage);
-
-                kafkaProducer.send(record, (metadata, exception) -> {
-                    if (exception != null) {
-                        logger.error("Error sending channel post to Kafka", exception);
-                    } else {
-                        logger.info("Channel post sent to topic: {}, partition: {}, offset: {}",
-                                metadata.topic(), metadata.partition(), metadata.offset());
-                    }
-                }).get(); // Blocking for simplicity, consider async in production
+                }); // Blocking for simplicity, consider async in production
             }
         } catch (Exception e) {
             logger.error("Error processing update", e);
