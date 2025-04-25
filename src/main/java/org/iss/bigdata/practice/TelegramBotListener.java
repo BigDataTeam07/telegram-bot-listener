@@ -25,7 +25,7 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
     private final ObjectMapper objectMapper;
 
     public TelegramBotListener(String botToken, String botUsername,
-                               String bootstrapServers, String kafkaTopic) {
+                               String bootstrapServers, String kafkaTopic, String saslUsername, String saslPassword) {
         super(botToken);
         this.botUsername = botUsername;
         this.kafkaTopic = kafkaTopic;
@@ -39,6 +39,12 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         props.put(ProducerConfig.RETRIES_CONFIG, 3);
         props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+        props.put("security.protocol", "SASL_PLAINTEXT");
+        props.put("sasl.mechanism", "PLAIN");
+        props.put("sasl.jaas.config",
+                "org.apache.kafka.common.security.plain.PlainLoginModule required " +
+                        "username=\"user1\" " +
+                        "password=\"user1-password\";");
 
         this.kafkaProducer = new KafkaProducer<>(props);
         logger.info("Kafka producer initialized with bootstrap servers: {}", bootstrapServers);

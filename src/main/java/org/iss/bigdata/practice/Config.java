@@ -10,14 +10,17 @@ public class Config {
     private final String telegramBotUsername;
     private final String kafkaBootstrapServers;
     private final String kafkaTopic;
-
+    private final String saslUsername;
+    private final String saslPassword;
     // Constructor
     public Config(String telegramBotToken, String telegramBotUsername,
-                  String kafkaBootstrapServers, String kafkaTopic) {
+                  String kafkaBootstrapServers, String kafkaTopic, String saslUsername, String saslPassword) {
         this.telegramBotToken = telegramBotToken;
         this.telegramBotUsername = telegramBotUsername;
         this.kafkaBootstrapServers = kafkaBootstrapServers;
         this.kafkaTopic = kafkaTopic;
+        this.saslUsername = saslUsername;
+        this.saslPassword = saslPassword;
     }
 
     // Load configuration from environment variables with defaults
@@ -25,10 +28,11 @@ public class Config {
         String telegramBotToken = getRequiredEnv("TELEGRAM_BOT_TOKEN");
         String telegramBotUsername = getRequiredEnv("TELEGRAM_BOT_USERNAME");
         String kafkaBootstrapServers = getEnv("KAFKA_BOOTSTRAP_SERVERS",
-                "amazon-music-review-kafka-service.amazon-music-review.svc.cluster.local:9092");
+                "localhost:9092");
         String kafkaTopic = getEnv("KAFKA_TOPIC", "social-media-topic");
-
-        return new Config(telegramBotToken, telegramBotUsername, kafkaBootstrapServers, kafkaTopic);
+        String saslUsername = getEnv("KAFKA_SASL_USERNAME", "user1");
+        String saslPassword = getEnv("KAFKA_SASL_PASSWORD", "user1-password");
+        return new Config(telegramBotToken, telegramBotUsername, kafkaBootstrapServers, kafkaTopic, saslUsername, saslPassword);
     }
 
     private static String getRequiredEnv(String name) {
@@ -64,5 +68,13 @@ public class Config {
 
     public String getKafkaTopic() {
         return kafkaTopic;
+    }
+
+    public String getSaslUsername() {
+        return saslUsername;
+    }
+
+    public String getSaslPassword() {
+        return saslPassword;
     }
 }

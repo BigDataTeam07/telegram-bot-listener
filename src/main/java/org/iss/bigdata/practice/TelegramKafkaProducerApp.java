@@ -25,7 +25,9 @@ public class TelegramKafkaProducerApp {
                     config.getTelegramBotToken(),
                     config.getTelegramBotUsername(),
                     config.getKafkaBootstrapServers(),
-                    config.getKafkaTopic()
+                    config.getKafkaTopic(),
+                    config.getSaslUsername(),
+                    config.getSaslPassword()
             );
 
             botsApi.registerBot(bot);

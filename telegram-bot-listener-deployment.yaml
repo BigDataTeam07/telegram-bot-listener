@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegram-bot-listener
+  namespace: amazon-music-review
+spec:
+  replicas: 1 # CAN ONLY SET TO ONE BECAUSE TELEGRAM BOT INSTANCE ONLY ALLOW ONE
+  selector:
+    matchLabels:
+      app: telegram-bot-listener
+  template:
+    metadata:
+      labels:
+        app: telegram-bot-listener
+    spec:
+      containers:
+        - name: telegram-bot-listener
+          image: ${DOCKER_IMAGE_TAG} # Will be replaced by Jenkins
+          imagePullPolicy: Always
+          env:
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: telegram-bot-credentials
+                  key: telegram-bot-token
+            - name: TELEGRAM_BOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: telegram-bot-credentials
+                  key: telegram-bot-username
+            - name: KAFKA_SASL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kafka-sasl-secret
+                  key: password
+            - name: KAFKA_SASL_USERNAME
+              valueFrom:
+                  secretKeyRef:
+                    name: kafka-sasl-secret
+                    key: username
+
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              # Updated connection string for the Helm-deployed Kafka
+              value: "bitnami-kafka.kafka-ns.svc.cluster.local:9092"
+            - name: KAFKA_TOPIC
+              value: "social-media-topic"
+          # readinessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 8080
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 8080
+          #   initialDelaySeconds: 60
+          #   periodSeconds: 20
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: telegram-bot-listener-service
+  namespace: amazon-music-review
+spec:
+  selector:
+    app: telegram-bot-listener
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP
