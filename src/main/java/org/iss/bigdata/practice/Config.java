@@ -30,8 +30,8 @@ public class Config {
         String kafkaBootstrapServers = getEnv("KAFKA_BOOTSTRAP_SERVERS",
                 "localhost:9092");
         String kafkaTopic = getEnv("KAFKA_TOPIC", "social-media-topic");
-        String saslUsername = getEnv("KAFKA_SASL_USERNAME", "user1");
-        String saslPassword = getEnv("KAFKA_SASL_PASSWORD", "user1-password");
+        String saslUsername = getRequiredEnv("KAFKA_SASL_USERNAME");
+        String saslPassword = getRequiredEnv("KAFKA_SASL_PASSWORD");
         return new Config(telegramBotToken, telegramBotUsername, kafkaBootstrapServers, kafkaTopic, saslUsername, saslPassword);
     }
 

@@ -8,7 +8,7 @@ group = "org.iss.bigdata.practice"
 version = "1.0-SNAPSHOT"
 
 application {
-    mainClass.set("org.iss.bigdata.practice.TelegramKafkaProducerApp")
+    mainClass.set("org.iss.bigdata.practice.TelegramBotListenerApp")
 }
 
 repositories {
@@ -25,7 +25,6 @@ dependencies {
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.12")
-    implementation("ch.qos.logback:logback-classic:1.5.3") // Updated to fix vulnerabilities
 
     // JSON
     implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
@@ -46,7 +45,7 @@ tasks.withType<Jar> {
 }
 
 tasks.shadowJar {
-    archiveBaseName.set("telegram-kafka-producer")
+    archiveBaseName.set("telegram-bot-listener")
     archiveClassifier.set("")
     archiveVersion.set("")
 }

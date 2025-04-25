@@ -6,8 +6,8 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
-public class TelegramKafkaProducerApp {
-    private static final Logger logger = LoggerFactory.getLogger(TelegramKafkaProducerApp.class);
+public class TelegramBotListenerApp {
+    private static final Logger logger = LoggerFactory.getLogger(TelegramBotListenerApp.class);
 
     public static void main(String[] args) {
         logger.info("Starting Telegram Kafka Producer Application");
