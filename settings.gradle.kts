@@ -1,2 +1,2 @@
-rootProject.name = "telegram-kafka-producer"
+rootProject.name = "telegram-bot-listener"
 

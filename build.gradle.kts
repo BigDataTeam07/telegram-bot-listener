@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "org.iss.bigdata.practice"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 application {
     mainClass.set("org.iss.bigdata.practice.TelegramBotListenerApp")
@@ -40,7 +40,7 @@ tasks.test {
 
 tasks.withType<Jar> {
     manifest {
-        attributes["Main-Class"] = "org.iss.bigdata.amazon.music.TelegramKafkaProducerApp"
+        attributes["Main-Class"] = "org.iss.bigdata.amazon.music.TelegramBotListenerApp"
     }
 }
 
