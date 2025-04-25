@@ -20,7 +20,7 @@ FROM eclipse-temurin:22-jre-alpine
 WORKDIR /app
 
 # Copy the jar from the build stage
-COPY --from=build /app/build/libs/telegram-kafka-producer.jar .
+COPY --from=build /app/build/libs/telegram-bot-listener.jar .
 
 # Run the application
-CMD ["java", "-jar", "telegram-kafka-producer.jar"]
+CMD ["java", "-jar", "telegram-bot-listener.jar"]
