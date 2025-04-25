@@ -44,18 +44,6 @@ spec:
               value: "bitnami-kafka.kafka-ns.svc.cluster.local:9092"
             - name: KAFKA_TOPIC
               value: "social-media-topic"
-          # readinessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: 8080
-          #   initialDelaySeconds: 30
-          #   periodSeconds: 10
-          # livenessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: 8080
-          #   initialDelaySeconds: 60
-          #   periodSeconds: 20
           resources:
             limits:
               memory: "512Mi"
