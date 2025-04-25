@@ -43,8 +43,7 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
         props.put("sasl.mechanism", "PLAIN");
         props.put("sasl.jaas.config",
                 "org.apache.kafka.common.security.plain.PlainLoginModule required " +
-                        "username=\"user1\" " +
-                        "password=\"user1-password\";");
+                        "username=" + saslUsername + " password=\"" + saslPassword + "\";");
 
         this.kafkaProducer = new KafkaProducer<>(props);
         logger.info("Kafka producer initialized with bootstrap servers: {}", bootstrapServers);
