@@ -3,10 +3,10 @@ FROM eclipse-temurin:22-jdk-alpine as build
 WORKDIR /app
 
 # Copy gradle build files
-COPY gradlew .
+COPY gradlew ./
 COPY gradle gradle
-COPY build.gradle.kts .
-COPY settings.gradle.kts .
+COPY build.gradle.kts ./
+COPY settings.gradle.kts ./
 
 # Copy source code
 COPY src src
