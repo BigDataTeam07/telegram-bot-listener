@@ -7,7 +7,6 @@ on:
       - 'src/**'
       - 'build.gradle.kts'
       - 'Dockerfile'
-      - '.github/workflows/build.yaml'
   push:
     branches: [ main ]
     paths:
@@ -115,8 +114,13 @@ jobs:
         with:
           version: 'latest'
 
+      - name: Update kubeconfig
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig.yaml
+          chmod 600 kubeconfig.yaml
+
       - name: Apply Kubernetes deployment
         env:
-          KUBECONFIG: ${{ secrets.KUBE_CONFIG }}
+          KUBECONFIG: ./kubeconfig.yaml
         run: |
-          kubectl apply -f /k8s/telegram-bot-listener-deployment.yaml
+          kubectl apply -f ./k8s/telegram-bot-listener-deployment.yaml
