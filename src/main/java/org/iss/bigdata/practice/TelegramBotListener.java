@@ -39,10 +39,10 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         props.put(ProducerConfig.RETRIES_CONFIG, 3);
         props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
-        props.put("security.protocol", "SASL_PLAINTEXT");
-        props.put("sasl.mechanism", "PLAIN");
+        props.put("security.protocol", "SASL_SSL");
+        props.put("sasl.mechanism", "SCRAM-SHA-512");
         props.put("sasl.jaas.config",
-                "org.apache.kafka.common.security.plain.PlainLoginModule required " +
+                "org.apache.kafka.common.security.scram.ScramLoginModule required " +
                         "username=" + saslUsername + " password=\"" + saslPassword + "\";");
 
         this.kafkaProducer = new KafkaProducer<>(props);
@@ -67,7 +67,7 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
                 logger.warn("Update does not contain a text message");
                 return;
             }
-            if (update.getMessage().getFrom() != null) {
+
                 Message message = update.getMessage();
 
                 String messageText = message.getText();
@@ -78,7 +78,8 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
                 // Convert to JSON
                 ObjectNode jsonNode = objectMapper.createObjectNode();
                 jsonNode.put("user_id", message.getFrom().getId());
-                jsonNode.put("username", message.getFrom().getUserName());
+                String userName = message.getFrom().getUserName() != null ? message.getFrom().getUserName() : "unknown";
+                jsonNode.put("username", userName);
                 jsonNode.put("message", messageText);
                 jsonNode.put("chat_id", message.getChatId());
                 jsonNode.put("chat_name", message.getChat().getTitle());
@@ -101,7 +102,7 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
 
                     }
                 });
-            }
+
         } catch (Exception e) {
             logger.error("Error processing update", e);
         }

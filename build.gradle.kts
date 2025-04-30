@@ -20,12 +20,16 @@ dependencies {
     implementation("org.telegram:telegrambots:6.9.7.1")
     implementation("org.telegram:telegrambotsextensions:6.9.7.1")
 
-    // Kafka
-    implementation("org.apache.kafka:kafka-clients:4.0.0")
+    // https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients
+    implementation("org.apache.kafka:kafka-clients:3.6.0")
+
+    // AWS SDK for Java v2 - Secrets Manager
+    implementation(platform("software.amazon.awssdk:bom:2.25.31")) // Add the BOM for consistent versions
+    implementation("software.amazon.awssdk:secretsmanager")
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.12")
-
+    implementation("ch.qos.logback:logback-classic:1.4.14") // Added logback implementation
     // JSON
     implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
 

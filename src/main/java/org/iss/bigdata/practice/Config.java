@@ -3,6 +3,11 @@ package org.iss.bigdata.practice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+
 public class Config {
     private static final Logger logger = LoggerFactory.getLogger(Config.class);
 
@@ -76,5 +81,47 @@ public class Config {
 
     public String getSaslPassword() {
         return saslPassword;
+    }
+
+
+
+    // If you need more information about configurations or implementing the sample
+    // code, visit the AWS docs:
+    // https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/home.html
+
+    public static String[] getSecret() {
+
+        String secretName = "music-review-msk-kafka-client";
+        Region region = Region.of("ap-southeast-1");
+
+        // Create a Secrets Manager client
+        SecretsManagerClient client = SecretsManagerClient.builder()
+                .region(region)
+                .build();
+
+        GetSecretValueRequest getSecretValueRequest = GetSecretValueRequest.builder()
+                .secretId(secretName)
+                .build();
+
+        GetSecretValueResponse getSecretValueResponse;
+
+        try {
+            getSecretValueResponse = client.getSecretValue(getSecretValueRequest);
+        } catch (Exception e) {
+            // For a list of exceptions thrown, see
+            // https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+            throw e;
+        }
+
+        String secret = getSecretValueResponse.secretString();
+
+        // decode username and password from the secret
+        String[] parts = secret.split(":", 2);
+        if ( parts.length != 2 ) {
+            throw new IllegalArgumentException("Secret format is invalid");
+        }
+        String username = parts[0];
+        String password = parts[1];
+        return new String[]{username, password};
     }
 }
