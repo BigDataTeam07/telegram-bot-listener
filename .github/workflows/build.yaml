@@ -76,7 +76,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           docker buildx build \
-            --platform linux/amd64,linux/arm64 \
+            --platform linux/amd64,linux/arm \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache-new \
             --progress=plain \
@@ -87,8 +87,3 @@ jobs:
           
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-      - name: Trigger Jenkins Deployment Job
-        uses: wei/curl@v1
-        with:
-          args: -X POST ${{ secrets.JENKINS_WEBHOOK_URL }} --user ${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }} --data-urlencode "IMAGE_TAG=${{ github.sha }}"
