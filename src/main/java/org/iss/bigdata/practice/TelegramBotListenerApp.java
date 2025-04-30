@@ -11,11 +11,16 @@ public class TelegramBotListenerApp {
 
     public static void main(String[] args) {
         logger.info("Starting Telegram Kafka Producer Application");
+
+        // singleton instances
         HTTPEndpointListener httpEndpointListener = HTTPEndpointListener.getInstance();
         TelegramBotSessionManager botSessionManager = TelegramBotSessionManager.getInstance();
+        // start the bot session
         botSessionManager.start();
+        // shutdown hook
+        Runtime.getRuntime().addShutdownHook(new Thread(botSessionManager::close));
+        // start the HTTP endpoint listener
         httpEndpointListener.start();
-
 
     }
 }
