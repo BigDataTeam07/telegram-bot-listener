@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: telegram-bot-listener
-          image: ${DOCKER_IMAGE_TAG} # Will be replaced by Jenkins
+          image: 119002862962.dkr.ecr.ap-southeast-1.amazonaws.com/amazon-music-review/telegram-bot-listener:latest
           imagePullPolicy: Always
           env:
             - name: TELEGRAM_BOT_TOKEN
@@ -37,13 +37,16 @@ spec:
                   key: password
             - name: KAFKA_SASL_USERNAME
               valueFrom:
-                  secretKeyRef:
-                    name: kafka-sasl-secret
-                    key: username
+                secretKeyRef:
+                  name: kafka-sasl-secret
+                  key: username
 
             - name: KAFKA_BOOTSTRAP_SERVERS
               # Updated connection string for the Helm-deployed Kafka
-              value: "bitnami-kafka.kafka-ns.svc.cluster.local:9092"
+              valueFrom:
+                secretKeyRef:
+                  name: kafka-bootstrap-servers
+                  key: bootstrap-servers
             - name: KAFKA_TOPIC
               value: "social-media-topic"
           resources:
@@ -63,6 +66,7 @@ spec:
   selector:
     app: telegram-bot-listener
   ports:
-    - port: 80
+    - protocol: TCP
+      port: 8080
       targetPort: 8080
-  type: ClusterIP
+  type: ClusterIP # HTTP command service
