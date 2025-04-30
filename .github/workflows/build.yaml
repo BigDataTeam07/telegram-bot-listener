@@ -8,6 +8,13 @@ on:
       - 'build.gradle.kts'
       - 'Dockerfile'
       - '.github/workflows/build.yaml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'build.gradle.kts'
+      - 'Dockerfile'
+      - '.github/workflows/build.yaml'
   workflow_dispatch:  # Allows manual triggering
 
 ## Github OIDC
@@ -22,7 +29,7 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -87,3 +94,34 @@ jobs:
           
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name == 'push' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: chenyu-01/terraform-eks-iss-big-data
+          token: '${{ secrets.PERSONAL_ACCESS_TOKEN }}'
+          path: '/services/telegram-bot-listener'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Apply Kubernetes deployment
+        env:
+          KUBECONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          kubectl apply -f telegram-bot-listener-deployment.yaml
