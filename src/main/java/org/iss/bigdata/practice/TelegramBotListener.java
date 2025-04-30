@@ -1,12 +1,13 @@
 package org.iss.bigdata.practice;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.kafka.clients.producer.KafkaProducer;
+
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerConfig;
+
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringSerializer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -14,8 +15,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.time.Instant;
-import java.util.Properties;
-import java.util.concurrent.ExecutionException;
+
 
 public class TelegramBotListener extends TelegramLongPollingBot implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(TelegramBotListener.class);
@@ -30,8 +30,6 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
         this.botUsername = botUsername;
         this.kafkaTopic = kafkaTopic;
         this.objectMapper = new ObjectMapper();
-
-
 
         this.kafkaProducer = projectKafkaProducer.getProjectKafkaProducer();
         logger.info("Kafka producer initialized successfully");
@@ -54,31 +52,15 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
             }
 
             // skip if the message is from a bot
-
             if (update.getMessage().getFrom().getIsBot()) {
                 logger.info("Ignoring message from bot: {}", update.getMessage().getFrom().getUserName());
                 return;
             }
+            // Process the message
 
             Message message = update.getMessage();
-
             String messageText = message.getText();
-
-            logger.info("Received message from user {}: {}",
-                    message.getFrom().getUserName(), messageText);
-
-            // Convert to JSON
-            ObjectNode jsonNode = objectMapper.createObjectNode();
-            jsonNode.put("user_id", message.getFrom().getId());
-            String userName = message.getFrom().getUserName() != null ? message.getFrom().getUserName() : "unknown";
-            jsonNode.put("username", userName);
-            jsonNode.put("message", messageText);
-            jsonNode.put("chat_id", message.getChatId());
-            jsonNode.put("chat_name", message.getChat().getTitle());
-            jsonNode.put("timestamp", Instant.now().toEpochMilli());
-
-
-            String jsonMessage = objectMapper.writeValueAsString(jsonNode);
+            String jsonMessage = getTelegramJsonMessage(message, messageText);
 
             // Send to Kafka
             String key = String.valueOf(message.getFrom().getId());
@@ -98,6 +80,21 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
         } catch (Exception e) {
             logger.error("Error processing update", e);
         }
+    }
+
+    private String getTelegramJsonMessage(Message message, String messageText) throws JsonProcessingException {
+        // Convert to JSON
+        ObjectNode jsonNode = objectMapper.createObjectNode();
+        jsonNode.put("user_id", message.getFrom().getId());
+        String userName = message.getFrom().getUserName() != null ? message.getFrom().getUserName() : "unknown";
+        jsonNode.put("username", userName);
+        jsonNode.put("message", messageText);
+        jsonNode.put("chat_id", message.getChatId());
+        jsonNode.put("chat_name", message.getChat().getTitle());
+        jsonNode.put("timestamp", Instant.now().toEpochMilli());
+
+        String jsonMessage = objectMapper.writeValueAsString(jsonNode);
+        return jsonMessage;
     }
 
     @Override
