@@ -32,7 +32,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 22
         uses: actions/setup-java@v3
@@ -103,10 +103,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          repository: chenyu-01/terraform-eks-iss-big-data
-          token: '${{ secrets.PERSONAL_ACCESS_TOKEN }}'
-          path: '/services/telegram-bot-listener'
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -124,4 +120,4 @@ jobs:
         env:
           KUBECONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
-          kubectl apply -f telegram-bot-listener-deployment.yaml
+          kubectl apply -f /k8s/telegram-bot-listener-deployment.yaml
