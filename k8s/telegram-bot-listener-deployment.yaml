@@ -5,6 +5,8 @@ metadata:
   namespace: service-ns
 spec:
   replicas: 1 # CAN ONLY SET TO ONE BECAUSE TELEGRAM BOT INSTANCE ONLY ALLOW ONE
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: telegram-bot-listener
