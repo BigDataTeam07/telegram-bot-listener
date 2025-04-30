@@ -24,29 +24,17 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
     private final String kafkaTopic;
     private final ObjectMapper objectMapper;
 
-    public TelegramBotListener(String botToken, String botUsername,
-                               String bootstrapServers, String kafkaTopic, String saslUsername, String saslPassword) {
+    public TelegramBotListener(String botToken, String botUsername
+                               , String kafkaTopic, ProjectKafkaProducer projectKafkaProducer) {
         super(botToken);
         this.botUsername = botUsername;
         this.kafkaTopic = kafkaTopic;
         this.objectMapper = new ObjectMapper();
 
-        // Configure Kafka producer
-        Properties props = new Properties();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.put(ProducerConfig.ACKS_CONFIG, "all");
-        props.put(ProducerConfig.RETRIES_CONFIG, 3);
-        props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
-        props.put("security.protocol", "SASL_SSL");
-        props.put("sasl.mechanism", "SCRAM-SHA-512");
-        props.put("sasl.jaas.config",
-                "org.apache.kafka.common.security.scram.ScramLoginModule required " +
-                        "username=" + saslUsername + " password=\"" + saslPassword + "\";");
 
-        this.kafkaProducer = new KafkaProducer<>(props);
-        logger.info("Kafka producer initialized with bootstrap servers: {}", bootstrapServers);
+
+        this.kafkaProducer = projectKafkaProducer.getProjectKafkaProducer();
+        logger.info("Kafka producer initialized successfully");
     }
 
     @Override
@@ -59,49 +47,53 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
         try {
             // Check if the update has a message and the message has text
             // For channel posts, include channel information
-            if (update.hasChannelPost() ) {
-                // skip channel posts
-                return;
-            }
-            if (!update.hasMessage() || !update.getMessage().hasText() ) {
+
+            if (!update.hasMessage() || !update.getMessage().hasText()) {
                 logger.warn("Update does not contain a text message");
                 return;
             }
 
-                Message message = update.getMessage();
+            // skip if the message is from a bot
 
-                String messageText = message.getText();
+            if (update.getMessage().getFrom().getIsBot()) {
+                logger.info("Ignoring message from bot: {}", update.getMessage().getFrom().getUserName());
+                return;
+            }
 
-                logger.info("Received message from user {}: {}",
-                        message.getFrom().getUserName(), messageText);
+            Message message = update.getMessage();
 
-                // Convert to JSON
-                ObjectNode jsonNode = objectMapper.createObjectNode();
-                jsonNode.put("user_id", message.getFrom().getId());
-                String userName = message.getFrom().getUserName() != null ? message.getFrom().getUserName() : "unknown";
-                jsonNode.put("username", userName);
-                jsonNode.put("message", messageText);
-                jsonNode.put("chat_id", message.getChatId());
-                jsonNode.put("chat_name", message.getChat().getTitle());
-                jsonNode.put("timestamp", Instant.now().toEpochMilli());
+            String messageText = message.getText();
+
+            logger.info("Received message from user {}: {}",
+                    message.getFrom().getUserName(), messageText);
+
+            // Convert to JSON
+            ObjectNode jsonNode = objectMapper.createObjectNode();
+            jsonNode.put("user_id", message.getFrom().getId());
+            String userName = message.getFrom().getUserName() != null ? message.getFrom().getUserName() : "unknown";
+            jsonNode.put("username", userName);
+            jsonNode.put("message", messageText);
+            jsonNode.put("chat_id", message.getChatId());
+            jsonNode.put("chat_name", message.getChat().getTitle());
+            jsonNode.put("timestamp", Instant.now().toEpochMilli());
 
 
-                String jsonMessage = objectMapper.writeValueAsString(jsonNode);
+            String jsonMessage = objectMapper.writeValueAsString(jsonNode);
 
-                // Send to Kafka
-                String key = String.valueOf(message.getFrom().getId());
-                ProducerRecord<String, String> record =
-                        new ProducerRecord<>(kafkaTopic, key, jsonMessage);
+            // Send to Kafka
+            String key = String.valueOf(message.getFrom().getId());
+            ProducerRecord<String, String> record =
+                    new ProducerRecord<>(kafkaTopic, key, jsonMessage);
 
-                kafkaProducer.send(record, (metadata, exception) -> {
-                    if (exception != null) {
-                        logger.error("Error sending message to Kafka", exception);
-                    } else {
-                        logger.info("Message sent to topic: {}, partition: {}, offset: {}",
-                                metadata.topic(), metadata.partition(), metadata.offset());
+            kafkaProducer.send(record, (metadata, exception) -> {
+                if (exception != null) {
+                    logger.error("Error sending message to Kafka", exception);
+                } else {
+                    logger.info("Message sent to topic: {}, partition: {}, offset: {}",
+                            metadata.topic(), metadata.partition(), metadata.offset());
 
-                    }
-                });
+                }
+            });
 
         } catch (Exception e) {
             logger.error("Error processing update", e);
