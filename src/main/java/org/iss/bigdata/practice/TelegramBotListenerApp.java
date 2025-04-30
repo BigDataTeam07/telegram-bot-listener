@@ -16,6 +16,11 @@ public class TelegramBotListenerApp {
         Config config = Config.loadFromEnvironment();
         logger.info("Configuration loaded successfully");
 
+        ProjectKafkaProducer projectKafkaProducer = new ProjectKafkaProducer(
+                config.getKafkaBootstrapServers(),
+                config.getSaslUsername(),
+                config.getSaslPassword()
+        );
         try {
             // Initialize Telegram Bot
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
@@ -24,10 +29,9 @@ public class TelegramBotListenerApp {
             TelegramBotListener bot = new TelegramBotListener(
                     config.getTelegramBotToken(),
                     config.getTelegramBotUsername(),
-                    config.getKafkaBootstrapServers(),
+
                     config.getKafkaTopic(),
-                    config.getSaslUsername(),
-                    config.getSaslPassword()
+                    projectKafkaProducer
             );
 
             botsApi.registerBot(bot);
