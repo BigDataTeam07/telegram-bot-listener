@@ -59,11 +59,16 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
                 logger.info("Ignoring message from bot: {}", update.getMessage().getFrom().getUserName());
                 return;
             }
+            // skip if message is not from group
+            if (message.getChat().isUserChat()) {
+                logger.info("Ignoring message from user chat: {}", update.getMessage().getFrom().getUserName());
+                return;
+            }
 
             // Check if the message starts with the bot's username mention
             if (messageText.trim().toLowerCase().startsWith("@" + this.botUsername.toLowerCase())) {
                 logger.info("Received mention from user {}: {}", message.getFrom().getUserName(), messageText);
-                sendHelloReply(message.getChatId());
+                sendReply(message.getChatId(), "Hello! How can I assist you?");
                 return; // Stop processing further if it's a mention/command
             }
 
@@ -106,10 +111,10 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
         return jsonMessage;
     }
 
-    private void sendHelloReply(Long chatId) {
+    private void sendReply(Long chatId, String replyText) {
         SendMessage replyMessage = new SendMessage();
         replyMessage.setChatId(chatId.toString()); // Set the chat ID to reply to
-        replyMessage.setText("hello"); // Set the reply text
+        replyMessage.setText(replyText); // Set the reply text
 
         try {
             execute(replyMessage); // Send the message
