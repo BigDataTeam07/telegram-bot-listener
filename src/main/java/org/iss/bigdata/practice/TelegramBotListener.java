@@ -11,8 +11,10 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.Instant;
 
@@ -50,16 +52,23 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
                 logger.warn("Update does not contain a text message");
                 return;
             }
-
+            Message message = update.getMessage();
+            String messageText = message.getText();
             // skip if the message is from a bot
-            if (update.getMessage().getFrom().getIsBot()) {
+            if (message.getFrom().getIsBot()) {
                 logger.info("Ignoring message from bot: {}", update.getMessage().getFrom().getUserName());
                 return;
             }
+
+            // Check if the message starts with the bot's username mention
+            if (messageText.trim().toLowerCase().startsWith("@" + this.botUsername.toLowerCase())) {
+                logger.info("Received mention from user {}: {}", message.getFrom().getUserName(), messageText);
+                sendHelloReply(message.getChatId());
+                return; // Stop processing further if it's a mention/command
+            }
+
             // Process the message
 
-            Message message = update.getMessage();
-            String messageText = message.getText();
             String jsonMessage = getTelegramJsonMessage(message, messageText);
 
             // Send to Kafka
@@ -97,11 +106,25 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
         return jsonMessage;
     }
 
+    private void sendHelloReply(Long chatId) {
+        SendMessage replyMessage = new SendMessage();
+        replyMessage.setChatId(chatId.toString()); // Set the chat ID to reply to
+        replyMessage.setText("hello"); // Set the reply text
+
+        try {
+            execute(replyMessage); // Send the message
+            logger.info("Sent 'hello' reply to chat ID: {}", chatId);
+        } catch (TelegramApiException e) {
+            logger.error("Failed to send 'hello' reply to chat ID: {}", chatId, e);
+        }
+    }
+
     @Override
     public void close() {
         if (kafkaProducer != null) {
             kafkaProducer.close();
             logger.info("Kafka producer closed");
         }
+        // close the connection, stop polling
     }
 }
