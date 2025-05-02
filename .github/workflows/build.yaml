@@ -1,4 +1,4 @@
-`name: Build and Push Docker Image
+name: Build and Push Docker Image
 
 on:
   pull_request:
@@ -129,4 +129,4 @@ jobs:
         env:
           KUBECONFIG: ./kubeconfig.yaml
         run: |
-          kubectl apply -f ./k8s/telegram-bot-listener-deployment.yaml`
+          kubectl apply -f ./k8s/telegram-bot-listener-deployment.yaml
