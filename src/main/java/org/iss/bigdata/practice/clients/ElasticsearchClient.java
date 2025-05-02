@@ -10,7 +10,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -48,16 +48,23 @@ public class ElasticsearchClient {
      * @return List of recommended song titles or empty list if none found
      */
     public List<String> getMusicRecommendationsForUser(Long userId) {
-        List<String> recommendations = new ArrayList<>();
+        HashSet<String> recommendations = new HashSet<String>();
 
         try {
+            // Query with time range filter for the last 24 hours
             String requestBody = "{\n" +
-                    "  \"size\": 2,\n" +
+                    "  \"size\": 3,\n" +
                     "  \"query\": {\n" +
-                    "    \"term\": {\n" +
-                    "      \"userId.keyword\": \"" + userId + "\"\n" +
+                    "    \"bool\": {\n" +
+                    "      \"must\": [\n" +
+                    "        { \"term\": { \"userId.keyword\": \"" + userId + "\" } },\n" +
+                    "        { \"range\": { \"@timestamp\": { \"gte\": \"now-24h/h\", \"lte\": \"now\" } } }\n" +
+                    "      ]\n" +
                     "    }\n" +
-                    "  }\n" +
+                    "  },\n" +
+                    "  \"sort\": [\n" +
+                    "    { \"@timestamp\": { \"order\": \"desc\" } }\n" +
+                    "  ]\n" +
                     "}";
 
             String searchUrl = elasticsearchUrl + "/recommendations-*/_search";
@@ -85,7 +92,8 @@ public class ElasticsearchClient {
                     }
                 }
 
-                logger.info("Found {} recommendations for user ID: {}", recommendations.size(), userId);
+                logger.info("Found {} recommendations from the last 24 hours for user ID: {}",
+                        recommendations.size(), userId);
             } else {
                 logger.error("Elasticsearch query failed with status code: {}, response: {}",
                         response.statusCode(), response.body());
@@ -97,7 +105,7 @@ public class ElasticsearchClient {
             }
         }
 
-        return recommendations;
+        return recommendations.stream().toList();
     }
 
 }

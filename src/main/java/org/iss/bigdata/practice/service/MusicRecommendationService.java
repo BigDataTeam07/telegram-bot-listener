@@ -72,9 +72,9 @@ public class MusicRecommendationService {
             // Get music recommendations
             List<String> recommendations = elasticsearchClient.getMusicRecommendationsForUser(userId);
 
-            // Build appropriate response
+
             if (recommendations == null || recommendations.isEmpty()) {
-                return generateFallbackRecommendations(username);
+                return generateGenericFallbackMessage(username);
             } else {
                 return formatRecommendations(username, recommendations);
             }
@@ -91,7 +91,7 @@ public class MusicRecommendationService {
         StringBuilder messageBuilder = new StringBuilder();
 
 
-        messageBuilder.append(String.format("Here are some music recommendations for you, @%s:\n\n", username));
+        messageBuilder.append(String.format("Here are some amazon music recommendations for you, @%s:\n\n", username));
 
 
         for (int i = 0; i < recommendations.size(); i++) {
@@ -102,15 +102,6 @@ public class MusicRecommendationService {
         return messageBuilder.toString();
     }
 
-
-    private String generateFallbackRecommendations(String username) {
-        List<String> recommendations;
-
-
-        recommendations = getRandomSublist(FALLBACK_GENERAL_RECOMMENDATIONS, 3);
-        return formatRecommendations(username, recommendations);
-
-    }
 
     /**
      * Get a random sublist of recommendations
@@ -131,7 +122,8 @@ public class MusicRecommendationService {
         List<String> recommendations = getRandomSublist(FALLBACK_GENERAL_RECOMMENDATIONS, 3);
 
         StringBuilder messageBuilder = new StringBuilder();
-        messageBuilder.append(String.format("Hi @%s! Here are some popular music recommendations for you:\n\n", username));
+        messageBuilder.append(String.format("Hi @%s! Your data is not available in our database. But don't worry!\n" +
+                ", here are %s general popular songs for you:\n\n", username, recommendations.size()));
 
         for (int i = 0; i < recommendations.size(); i++) {
             messageBuilder.append(String.format("%d. %s\n", i + 1, recommendations.get(i)));
