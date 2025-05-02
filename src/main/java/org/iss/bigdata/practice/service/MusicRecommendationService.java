@@ -91,7 +91,7 @@ public class MusicRecommendationService {
         StringBuilder messageBuilder = new StringBuilder();
 
 
-        messageBuilder.append(String.format("Here are some amazon music recommendations for you, @%s:\n\n", username));
+        messageBuilder.append(String.format("Here are some music recommendations for you, @%s:\n\n", username));
 
 
         for (int i = 0; i < recommendations.size(); i++) {
