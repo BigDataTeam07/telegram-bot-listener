@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 
 /**
@@ -14,9 +13,7 @@ import java.util.Random;
  */
 public class MusicRecommendationService {
     private static final Logger logger = LoggerFactory.getLogger(MusicRecommendationService.class);
-    private final ElasticsearchClient elasticsearchClient;
     private static final MusicRecommendationService INSTANCE = new MusicRecommendationService();
-
     // Fallback recommendations when Elasticsearch doesn't return any results
     private static final List<String> FALLBACK_HAPPY_RECOMMENDATIONS = Arrays.asList(
             "Happy by Pharrell Williams",
@@ -25,7 +22,6 @@ public class MusicRecommendationService {
             "Good Feeling by Flo Rida",
             "Can't Stop the Feeling by Justin Timberlake"
     );
-
     private static final List<String> FALLBACK_CALM_RECOMMENDATIONS = Arrays.asList(
             "Weightless by Marconi Union",
             "Clair de Lune by Claude Debussy",
@@ -33,7 +29,6 @@ public class MusicRecommendationService {
             "River Flows in You by Yiruma",
             "Moon River by Henry Mancini"
     );
-
     private static final List<String> FALLBACK_ENERGETIC_RECOMMENDATIONS = Arrays.asList(
             "Eye of the Tiger by Survivor",
             "Till I Collapse by Eminem",
@@ -41,7 +36,6 @@ public class MusicRecommendationService {
             "Seven Nation Army by The White Stripes",
             "Thunderstruck by AC/DC"
     );
-
     private static final List<String> FALLBACK_GENERAL_RECOMMENDATIONS = Arrays.asList(
             "Bohemian Rhapsody by Queen",
             "Billie Jean by Michael Jackson",
@@ -52,7 +46,7 @@ public class MusicRecommendationService {
             "Rolling in the Deep by Adele",
             "Smells Like Teen Spirit by Nirvana"
     );
-
+    private final ElasticsearchClient elasticsearchClient;
     private final Random random = new Random();
 
     private MusicRecommendationService() {
@@ -65,7 +59,8 @@ public class MusicRecommendationService {
 
     /**
      * Get recommendation message for a user
-     * @param userId The user's Telegram ID
+     *
+     * @param userId   The user's Telegram ID
      * @param username The user's Telegram username
      * @return A message with recommendations or appropriate fallback message
      */
@@ -73,17 +68,15 @@ public class MusicRecommendationService {
         logger.info("Getting music recommendations for user: {} (ID: {})", username, userId);
 
         try {
-            // Get the latest sentiment for context
-            Optional<String> latestSentiment = elasticsearchClient.getLatestUserSentiment(userId);
 
             // Get music recommendations
             List<String> recommendations = elasticsearchClient.getMusicRecommendationsForUser(userId);
 
             // Build appropriate response
             if (recommendations == null || recommendations.isEmpty()) {
-                return generateFallbackRecommendations(username, latestSentiment);
+                return generateFallbackRecommendations(username);
             } else {
-                return formatRecommendations(username, latestSentiment, recommendations);
+                return formatRecommendations(username, recommendations);
             }
         } catch (Exception e) {
             logger.error("Error while getting recommendations", e);
@@ -94,15 +87,12 @@ public class MusicRecommendationService {
     /**
      * Format recommendations in a user-friendly way
      */
-    private String formatRecommendations(String username, Optional<String> sentiment, List<String> recommendations) {
+    private String formatRecommendations(String username, List<String> recommendations) {
         StringBuilder messageBuilder = new StringBuilder();
 
-        if (sentiment.isPresent()) {
-            messageBuilder.append(String.format("Based on your %s mood, @%s, here are some music recommendations for you:\n\n",
-                    sentiment.get(), username));
-        } else {
-            messageBuilder.append(String.format("Here are some music recommendations for you, @%s:\n\n", username));
-        }
+
+        messageBuilder.append(String.format("Here are some music recommendations for you, @%s:\n\n", username));
+
 
         for (int i = 0; i < recommendations.size(); i++) {
             messageBuilder.append(String.format("%d. %s\n", i + 1, recommendations.get(i)));
@@ -112,32 +102,14 @@ public class MusicRecommendationService {
         return messageBuilder.toString();
     }
 
-    /**
-     * Generate fallback recommendations when we have sentiment but no actual recommendations
-     */
-    private String generateFallbackRecommendations(String username, Optional<String> sentiment) {
+
+    private String generateFallbackRecommendations(String username) {
         List<String> recommendations;
 
-        if (sentiment.isPresent()) {
-            String mood = sentiment.get().toLowerCase();
 
-            // Select recommendations based on the sentiment
-            if (mood.contains("happy") || mood.contains("positive") || mood.contains("joyful")) {
-                recommendations = getRandomSublist(FALLBACK_HAPPY_RECOMMENDATIONS, 3);
-            } else if (mood.contains("calm") || mood.contains("peaceful") || mood.contains("relaxed")) {
-                recommendations = getRandomSublist(FALLBACK_CALM_RECOMMENDATIONS, 3);
-            } else if (mood.contains("energetic") || mood.contains("excited") || mood.contains("motivated")) {
-                recommendations = getRandomSublist(FALLBACK_ENERGETIC_RECOMMENDATIONS, 3);
-            } else {
-                recommendations = getRandomSublist(FALLBACK_GENERAL_RECOMMENDATIONS, 3);
-            }
+        recommendations = getRandomSublist(FALLBACK_GENERAL_RECOMMENDATIONS, 3);
+        return formatRecommendations(username, recommendations);
 
-            return formatRecommendations(username, sentiment, recommendations);
-        } else {
-            // No sentiment available, provide generic fallback
-            recommendations = getRandomSublist(FALLBACK_GENERAL_RECOMMENDATIONS, 3);
-            return formatRecommendations(username, Optional.empty(), recommendations);
-        }
     }
 
     /**

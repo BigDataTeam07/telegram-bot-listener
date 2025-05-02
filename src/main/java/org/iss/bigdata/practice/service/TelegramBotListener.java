@@ -77,7 +77,6 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
             }
 
 
-            // Process regular messages for sentiment analysis via Kafka
             sendMessageToKafka(message);
 
         } catch (Exception e) {
@@ -109,9 +108,6 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
         sendReply(message.getChatId(), recommendationMessage);
     }
 
-    /**
-     * Send a message to Kafka for sentiment analysis
-     */
     private void sendMessageToKafka(Message message) throws JsonProcessingException {
         String messageText = message.getText();
         String jsonMessage = getTelegramJsonMessage(message, messageText);
