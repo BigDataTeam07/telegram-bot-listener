@@ -43,3 +43,4 @@ bin/
 
 ### build scripts ###
 build-and-deploy.sh
+/.idea/runConfigurations/TelegramBotListenerApp.xml
