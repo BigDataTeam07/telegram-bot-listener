@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -15,27 +16,6 @@ public class MusicRecommendationService {
     private static final Logger logger = LoggerFactory.getLogger(MusicRecommendationService.class);
     private static final MusicRecommendationService INSTANCE = new MusicRecommendationService();
     // Fallback recommendations when Elasticsearch doesn't return any results
-    private static final List<String> FALLBACK_HAPPY_RECOMMENDATIONS = Arrays.asList(
-            "Happy by Pharrell Williams",
-            "Uptown Funk by Mark Ronson ft. Bruno Mars",
-            "Walking on Sunshine by Katrina and The Waves",
-            "Good Feeling by Flo Rida",
-            "Can't Stop the Feeling by Justin Timberlake"
-    );
-    private static final List<String> FALLBACK_CALM_RECOMMENDATIONS = Arrays.asList(
-            "Weightless by Marconi Union",
-            "Clair de Lune by Claude Debussy",
-            "Someone Like You by Adele",
-            "River Flows in You by Yiruma",
-            "Moon River by Henry Mancini"
-    );
-    private static final List<String> FALLBACK_ENERGETIC_RECOMMENDATIONS = Arrays.asList(
-            "Eye of the Tiger by Survivor",
-            "Till I Collapse by Eminem",
-            "Stronger by Kanye West",
-            "Seven Nation Army by The White Stripes",
-            "Thunderstruck by AC/DC"
-    );
     private static final List<String> FALLBACK_GENERAL_RECOMMENDATIONS = Arrays.asList(
             "Bohemian Rhapsody by Queen",
             "Billie Jean by Michael Jackson",
@@ -70,7 +50,7 @@ public class MusicRecommendationService {
         try {
 
             // Get music recommendations
-            List<String> recommendations = elasticsearchClient.getMusicRecommendationsForUser(userId);
+            HashMap<String, String> recommendations = elasticsearchClient.getMusicRecommendationsForUser(userId);
 
 
             if (recommendations == null || recommendations.isEmpty()) {
@@ -87,15 +67,20 @@ public class MusicRecommendationService {
     /**
      * Format recommendations in a user-friendly way
      */
-    private String formatRecommendations(String username, List<String> recommendations) {
+    private String formatRecommendations(String username, HashMap<String, String> recommendations) {
         StringBuilder messageBuilder = new StringBuilder();
 
 
         messageBuilder.append(String.format("Here are some music recommendations for you, @%s:\n\n", username));
 
-
-        for (int i = 0; i < recommendations.size(); i++) {
-            messageBuilder.append(String.format("%d. %s\n", i + 1, recommendations.get(i)));
+        // telegram bot markdown v2 format
+        // title - link to the song, link format: https://www.amazon.sg/dp/${productId}
+        int count = 0;
+        for (String productId : recommendations.keySet()) {
+            count++;
+            String musicTitle = recommendations.get(productId);
+            String amazonLink = String.format("https://www.amazon.sg/dp/%s", productId);
+            messageBuilder.append(String.format("%d. %s [view on amazon](%s)\n", count, musicTitle, amazonLink));
         }
 
         messageBuilder.append("\nEnjoy listening! 🎵");

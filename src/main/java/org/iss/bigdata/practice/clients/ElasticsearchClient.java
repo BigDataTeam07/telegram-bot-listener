@@ -10,8 +10,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashSet;
-import java.util.List;
+import java.util.HashMap;
 
 /**
  * Client to interact with Elasticsearch for music recommendations
@@ -47,8 +46,8 @@ public class ElasticsearchClient {
      * @param userId The Telegram user ID to search for
      * @return List of recommended song titles or empty list if none found
      */
-    public List<String> getMusicRecommendationsForUser(Long userId) {
-        HashSet<String> recommendations = new HashSet<String>();
+    public HashMap<String, String> getMusicRecommendationsForUser(Long userId) {
+        HashMap<String, String> recommendations = new HashMap<>();
 
         try {
             // Query with time range filter for the last 24 hours
@@ -86,8 +85,8 @@ public class ElasticsearchClient {
                     for (JsonNode hit : hits) {
                         JsonNode source = hit.path("_source");
                         // The title is directly in the source
-                        if (source.has("title")) {
-                            recommendations.add(source.path("title").asText());
+                        if (source.has("title") && source.has("productId")) {
+                            recommendations.put(source.get("productId").asText(), source.get("title").asText());
                         }
                     }
                 }
@@ -105,7 +104,7 @@ public class ElasticsearchClient {
             }
         }
 
-        return recommendations.stream().toList();
+        return recommendations;
     }
 
 }
