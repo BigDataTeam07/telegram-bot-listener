@@ -4,9 +4,12 @@ metadata:
   name: telegram-bot-listener
   namespace: service-ns
 spec:
-  replicas: 1 # CAN ONLY SET TO ONE BECAUSE TELEGRAM BOT INSTANCE ONLY ALLOW ONE
   strategy:
-    type: Recreate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  replicas: 1 # only one instance allowed
   selector:
     matchLabels:
       app: telegram-bot-listener
@@ -17,7 +20,7 @@ spec:
     spec:
       containers:
         - name: telegram-bot-listener
-          image: 119002862962.dkr.ecr.ap-southeast-1.amazonaws.com/amazon-music-review/telegram-bot-listener:latest
+          image: 119002862962.dkr.ecr.ap-southeast-1.amazonaws.com/amazon-music-review/telegram-bot-listener:${GITHUB_SHA}
           imagePullPolicy: Always
           env:
             - name: TELEGRAM_BOT_TOKEN

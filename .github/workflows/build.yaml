@@ -1,12 +1,6 @@
-name: Build and Push Docker Image
+name: Build and Push and Deploy to EKS
 
 on:
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'src/**'
-      - 'build.gradle.kts'
-      - 'Dockerfile'
   push:
     branches: [ main ]
     paths:
@@ -97,7 +91,6 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -128,5 +121,6 @@ jobs:
       - name: Apply Kubernetes deployment
         env:
           KUBECONFIG: ./kubeconfig.yaml
+          GITHUB_SHA: ${{ github.sha }}
         run: |
-          kubectl apply -f ./k8s/telegram-bot-listener-deployment.yaml
+          envsubst < ./k8s/telegram-bot-listener-deployment.yaml | kubectl apply -f -
