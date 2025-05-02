@@ -74,12 +74,12 @@ public class MusicRecommendationService {
         messageBuilder.append(String.format("Here are some music recommendations for you, @%s:\n\n", username));
 
         // telegram bot markdown v2 format
-        // title - link to the song, link format: https://www.amazon.sg/dp/${productId}
+        // title - link to the song, link format: https://www.amazon.com/dp/${productId}
         int count = 0;
         for (String productId : recommendations.keySet()) {
             count++;
             String musicTitle = recommendations.get(productId);
-            String amazonLink = String.format("https://www.amazon.sg/dp/%s", productId);
+            String amazonLink = String.format("https://www.amazon.com/dp/%s", productId);
             messageBuilder.append(String.format("%d. %s [view on amazon](%s)\n", count, musicTitle, amazonLink));
         }
 
