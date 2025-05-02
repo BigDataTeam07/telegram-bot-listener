@@ -19,10 +19,10 @@ import java.util.Optional;
  */
 public class ElasticsearchClient {
     private static final Logger logger = LoggerFactory.getLogger(ElasticsearchClient.class);
+    private static final ElasticsearchClient INSTANCE = new ElasticsearchClient();
     private final HttpClient httpClient;
     private final String elasticsearchUrl;
     private final ObjectMapper objectMapper;
-    private static final ElasticsearchClient INSTANCE = new ElasticsearchClient();
 
     private ElasticsearchClient() {
         // Configure timeout settings
@@ -44,6 +44,7 @@ public class ElasticsearchClient {
 
     /**
      * Find music recommendations for a specific user ID
+     *
      * @param userId The Telegram user ID to search for
      * @return List of recommended song titles or empty list if none found
      */
@@ -51,19 +52,15 @@ public class ElasticsearchClient {
         List<String> recommendations = new ArrayList<>();
 
         try {
-            // Modified query to remove the timestamp sort which was causing the error
             String requestBody = "{\n" +
-                    "  \"size\": 1,\n" +
+                    "  \"size\": 2,\n" +
                     "  \"query\": {\n" +
-                    "    \"bool\": {\n" +
-                    "      \"must\": [\n" +
-                    "        { \"match\": { \"user_id\": \"" + userId + "\" } }\n" +
-                    "      ]\n" +
+                    "    \"term\": {\n" +
+                    "      \"userId.keyword\": \"" + userId + "\"\n" +
                     "    }\n" +
                     "  }\n" +
                     "}";
 
-            // We want to search across all days
             String searchUrl = elasticsearchUrl + "/recommendations-*/_search";
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -78,20 +75,13 @@ public class ElasticsearchClient {
                 JsonNode jsonResponse = objectMapper.readTree(response.body());
                 JsonNode hits = jsonResponse.path("hits").path("hits");
 
-                // Extract song titles from the response
+                // Extract song titles directly from the hits
                 if (hits.isArray() && hits.size() > 0) {
                     for (JsonNode hit : hits) {
                         JsonNode source = hit.path("_source");
-                        // Extract song recommendations from the source
-                        if (source.has("recommendations")) {
-                            JsonNode recommendations_node = source.path("recommendations");
-                            if (recommendations_node.isArray()) {
-                                for (JsonNode rec : recommendations_node) {
-                                    if (rec.has("title")) {
-                                        recommendations.add(rec.path("title").asText());
-                                    }
-                                }
-                            }
+                        // The title is directly in the source
+                        if (source.has("title")) {
+                            recommendations.add(source.path("title").asText());
                         }
                     }
                 }
@@ -113,6 +103,7 @@ public class ElasticsearchClient {
 
     /**
      * Get the latest sentiment for a user from user-sentiment index
+     *
      * @param userId The Telegram user ID
      * @return An Optional containing the sentiment or empty if not found
      */
@@ -234,6 +225,7 @@ public class ElasticsearchClient {
 
     /**
      * Query for a sample document to understand the actual structure
+     *
      * @param indexName The index to query
      */
     public void getSampleDocument(String indexName) {

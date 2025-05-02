@@ -3,10 +3,8 @@ package org.iss.bigdata.practice.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -75,8 +73,6 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
             if (messageText.toLowerCase().contains(MUSIC_RECOMMEND_COMMAND.toLowerCase())) {
                 logger.info("Music recommendation command detected from user: {}", message.getFrom().getUserName());
                 handleMusicRecommendation(message);
-                // We still want to send this message to Kafka for sentiment analysis
-                sendMessageToKafka(message);
                 return;
             }
 
