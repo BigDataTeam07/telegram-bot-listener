@@ -1,4 +1,4 @@
-package org.iss.bigdata.practice;
+package org.iss.bigdata.practice.clients;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -9,19 +9,19 @@ import java.net.InetSocketAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HTTPEndpointListener {
-    private static final Logger logger = LoggerFactory.getLogger(HTTPEndpointListener.class);
+public class HTTPEndpointClient {
+    private static final Logger logger = LoggerFactory.getLogger(HTTPEndpointClient.class);
     private static final int PORT = 8080;
     private static final String SHUTDOWN_PATH = "/shutdown";
     private static final String STARTUP_PATH = "/start";
     private final TelegramBotSessionManager botSession;
-    private static final HTTPEndpointListener INSTANCE = new HTTPEndpointListener();
+    private static final HTTPEndpointClient INSTANCE = new HTTPEndpointClient();
 
-    private HTTPEndpointListener() {
+    private HTTPEndpointClient() {
         this.botSession = TelegramBotSessionManager.getInstance();
     }
 
-    public static HTTPEndpointListener getInstance() {
+    public static HTTPEndpointClient getInstance() {
         return INSTANCE;
     }
 

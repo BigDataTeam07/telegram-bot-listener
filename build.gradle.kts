@@ -23,9 +23,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients
     implementation("org.apache.kafka:kafka-clients:3.6.0")
 
-    // AWS SDK for Java v2 - Secrets Manager
-    implementation(platform("software.amazon.awssdk:bom:2.25.31")) // Add the BOM for consistent versions
-    implementation("software.amazon.awssdk:secretsmanager")
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.12")

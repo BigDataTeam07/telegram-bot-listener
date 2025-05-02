@@ -1,12 +1,7 @@
-package org.iss.bigdata.practice;
+package org.iss.bigdata.practice.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 
 public class Config {
     private static final Logger logger = LoggerFactory.getLogger(Config.class);
