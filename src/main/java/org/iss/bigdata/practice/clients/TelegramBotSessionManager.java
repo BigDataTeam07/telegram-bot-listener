@@ -1,6 +1,9 @@
 // src/main/java/org/iss/bigdata/practice/TelegramBotSessionManager.java
-package org.iss.bigdata.practice;
+package org.iss.bigdata.practice.clients;
 
+import org.iss.bigdata.practice.config.Config;
+import org.iss.bigdata.practice.service.ProjectKafkaProducer;
+import org.iss.bigdata.practice.service.TelegramBotListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.meta.TelegramBotsApi;

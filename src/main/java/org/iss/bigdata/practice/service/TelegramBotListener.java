@@ -1,4 +1,4 @@
-package org.iss.bigdata.practice;
+package org.iss.bigdata.practice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,14 +25,14 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
     private final Producer<String, String> kafkaProducer;
     private final String kafkaTopic;
     private final ObjectMapper objectMapper;
-
+    private final MusicRecommendationService recommendationService;
     public TelegramBotListener(String botToken, String botUsername
                                , String kafkaTopic, ProjectKafkaProducer projectKafkaProducer) {
         super(botToken);
         this.botUsername = botUsername;
         this.kafkaTopic = kafkaTopic;
         this.objectMapper = new ObjectMapper();
-
+        this.recommendationService = MusicRecommendationService.getInstance();
         this.kafkaProducer = projectKafkaProducer.getProjectKafkaProducer();
         logger.info("Kafka producer initialized successfully");
     }
@@ -68,7 +68,7 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
             // Check if the message starts with the bot's username mention
             if (messageText.trim().toLowerCase().startsWith("@" + this.botUsername.toLowerCase())) {
                 logger.info("Received mention from user {}: {}", message.getFrom().getUserName(), messageText);
-                sendReply(message.getChatId(), "Hello! How can I assist you?");
+                handleMusicRecommendation(message);
                 return; // Stop processing further if it's a mention/command
             }
 
@@ -122,6 +122,20 @@ public class TelegramBotListener extends TelegramLongPollingBot implements AutoC
         } catch (TelegramApiException e) {
             logger.error("Failed to send 'hello' reply to chat ID: {}", chatId, e);
         }
+    }
+
+    private void handleMusicRecommendation(Message message) {
+        Long userId = message.getFrom().getId();
+        String username = message.getFrom().getUserName() != null ?
+                message.getFrom().getUserName() : "user";
+
+        logger.info("Processing music recommendation command for user: {} (ID: {})", username, userId);
+
+        // Get recommendations from our service
+        String recommendationMessage = recommendationService.getRecommendationMessage(userId, username);
+
+        // Send the recommendation message to the chat
+        sendReply(message.getChatId(), recommendationMessage);
     }
 
     @Override

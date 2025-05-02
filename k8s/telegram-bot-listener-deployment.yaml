@@ -40,15 +40,19 @@ spec:
                 secretKeyRef:
                   name: kafka-sasl-secret
                   key: username
-
             - name: KAFKA_BOOTSTRAP_SERVERS
-              # Updated connection string for the Helm-deployed Kafka
               valueFrom:
                 secretKeyRef:
                   name: kafka-bootstrap-servers
                   key: bootstrap-servers
             - name: KAFKA_TOPIC
               value: "social-media-topic"
+            # Add Elasticsearch URL environment variable
+            - name: ELASTICSEARCH_URL
+              value: "http://elasticsearch.elk-ns.svc.cluster.local:9200"
+          ports:
+            - containerPort: 8080
+              name: http
           resources:
             limits:
               memory: "512Mi"
